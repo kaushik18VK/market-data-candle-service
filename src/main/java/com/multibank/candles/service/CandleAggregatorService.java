@@ -4,7 +4,6 @@ import com.multibank.candles.model.BidAskEvent;
 import com.multibank.candles.model.Candle;
 import com.multibank.candles.model.Interval;
 import com.multibank.candles.storage.CandleHistoryStore;
-import com.multibank.candles.storage.InMemoryCandleHistoryStore;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -15,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,12 +25,9 @@ public class CandleAggregatorService {
     private final Map<SymbolIntervalKey, MutableCandle> activeCandles = new ConcurrentHashMap<>();
     private final CandleHistoryStore historyStore;
 
+    @Autowired
     public CandleAggregatorService(CandleHistoryStore historyStore) {
         this.historyStore = historyStore;
-    }
-
-    CandleAggregatorService() {
-        this.historyStore = new InMemoryCandleHistoryStore();
     }
 
     public void onEvent(BidAskEvent event) {

@@ -5,12 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import com.multibank.candles.model.BidAskEvent;
 import com.multibank.candles.model.Candle;
 import com.multibank.candles.model.Interval;
+import com.multibank.candles.storage.InMemoryCandleHistoryStore;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class CandleAggregatorServiceTest {
 
-    private final CandleAggregatorService service = new CandleAggregatorService();
+    private final CandleAggregatorService service = new CandleAggregatorService(new InMemoryCandleHistoryStore());
 
     @Test
     void shouldAggregateWithinSameBucket() {

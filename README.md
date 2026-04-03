@@ -8,7 +8,7 @@ Backend Java service that ingests bid/ask events, aggregates OHLC candles for mu
   - `1s`, `5s`, `1m`, `15m`, `1h`
 - History endpoint compatible with charting libraries:
   - `GET /history?symbol=BTC-USD&interval=1m&from=1620000000&to=1620000600`
-- H2 in-memory SQL storage for finalized candles (`candles` table)
+- PostgreSQL storage for candles (`candles` table)
 - In-memory active-candle cache for current open buckets
 - Health endpoint via Spring Boot Actuator (`/actuator/health`)
 - Unit tests for interval parsing and aggregation behavior
@@ -16,7 +16,7 @@ Backend Java service that ingests bid/ask events, aggregates OHLC candles for mu
 ## Tech Stack
 - Java 17
 - Spring Boot 3 (Web + Actuator)
-- H2 + Spring JDBC
+- PostgreSQL + Spring JDBC
 - JUnit 5
 
 ## Architecture
@@ -30,20 +30,27 @@ Backend Java service that ingests bid/ask events, aggregates OHLC candles for mu
 
 ## Run Locally
 ```bash
+docker compose up -d
 mvn spring-boot:run
 ```
 
 Service starts on `http://localhost:8080`.
 
-## View Database (H2 Console)
-- URL: `http://localhost:8080/h2-console`
-- JDBC URL: `jdbc:h2:mem:candlesdb`
-- User: `sa`
-- Password: *(leave blank)*
+## View Database (PostgreSQL)
+- Host: `localhost`
+- Port: `5432`
+- DB: `candlesdb`
+- User: `postgres`
+- Password: `postgres`
 
 Try:
 ```sql
 SELECT * FROM candles ORDER BY time DESC LIMIT 20;
+```
+
+Using `psql`:
+```bash
+psql -h localhost -U postgres -d candlesdb -c "SELECT * FROM candles ORDER BY time DESC LIMIT 20;"
 ```
 
 ## Test
@@ -73,7 +80,7 @@ Example response:
 - Event timestamp is in UNIX seconds.
 - Mid price `((bid + ask) / 2)` is used as candle price.
 - Volume is synthetic tick count.
-- Active in-progress candles stay in memory; completed candles are persisted in H2.
+- Active in-progress candles stay in memory and are continuously upserted into PostgreSQL.
 - Delayed event handling is supported with merge logic, but exact historical open/close ordering for very late out-of-order events is best-effort unless upstream ordering guarantees are provided.
 
 ## Scaling Notes (Bonus Discussion)

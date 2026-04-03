@@ -30,9 +30,15 @@ public class JdbcCandleHistoryStore implements CandleHistoryStore {
     @Override
     public void upsert(String symbol, Interval interval, Candle candle) {
         jdbcTemplate.update("""
-            MERGE INTO candles (symbol, interval_code, time, open, high, low, close, volume)
-            KEY (symbol, interval_code, time)
+            INSERT INTO candles (symbol, interval_code, time, open, high, low, close, volume)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (symbol, interval_code, time)
+            DO UPDATE SET
+                open = EXCLUDED.open,
+                high = EXCLUDED.high,
+                low = EXCLUDED.low,
+                close = EXCLUDED.close,
+                volume = EXCLUDED.volume
             """,
             symbol,
             interval.code(),
