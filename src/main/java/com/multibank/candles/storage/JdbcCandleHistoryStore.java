@@ -52,6 +52,28 @@ public class JdbcCandleHistoryStore implements CandleHistoryStore {
     }
 
     @Override
+    public void mergeLateTick(String symbol, Interval interval, long bucketStart, double price) {
+        jdbcTemplate.update("""
+            INSERT INTO candles (symbol, interval_code, time, open, high, low, close, volume)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            ON CONFLICT (symbol, interval_code, time)
+            DO UPDATE SET
+                high = GREATEST(candles.high, EXCLUDED.high),
+                low = LEAST(candles.low, EXCLUDED.low),
+                close = EXCLUDED.close,
+                volume = candles.volume + 1
+            """,
+            symbol,
+            interval.code(),
+            bucketStart,
+            price,
+            price,
+            price,
+            price
+        );
+    }
+
+    @Override
     public Optional<Candle> findAt(String symbol, Interval interval, long time) {
         List<Candle> rows = jdbcTemplate.query("""
                 SELECT time, open, high, low, close, volume

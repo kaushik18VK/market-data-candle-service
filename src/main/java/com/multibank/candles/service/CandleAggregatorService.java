@@ -87,18 +87,7 @@ public class CandleAggregatorService {
     }
 
     private void mergeLateEvent(SymbolIntervalKey key, long bucketStart, double price) {
-        Candle merged = historyStore.findAt(key.symbol(), key.interval(), bucketStart)
-            .map(existing -> new Candle(
-                existing.time(),
-                existing.open(),
-                Math.max(existing.high(), price),
-                Math.min(existing.low(), price),
-                price,
-                existing.volume() + 1
-            ))
-            .orElseGet(() -> new Candle(bucketStart, price, price, price, price, 1));
-
-        historyStore.upsert(key.symbol(), key.interval(), merged);
+        historyStore.mergeLateTick(key.symbol(), key.interval(), bucketStart, price);
     }
 
     private void persist(SymbolIntervalKey key, Candle candle) {

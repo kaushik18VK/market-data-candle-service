@@ -19,6 +19,23 @@ public class InMemoryCandleHistoryStore implements CandleHistoryStore {
     }
 
     @Override
+    public void mergeLateTick(String symbol, Interval interval, long bucketStart, double price) {
+        map(symbol, interval).compute(bucketStart, (ts, existing) -> {
+            if (existing == null) {
+                return new Candle(bucketStart, price, price, price, price, 1);
+            }
+            return new Candle(
+                existing.time(),
+                existing.open(),
+                Math.max(existing.high(), price),
+                Math.min(existing.low(), price),
+                price,
+                existing.volume() + 1
+            );
+        });
+    }
+
+    @Override
     public Optional<Candle> findAt(String symbol, Interval interval, long time) {
         return Optional.ofNullable(map(symbol, interval).get(time));
     }
